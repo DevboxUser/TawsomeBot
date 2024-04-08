@@ -9,6 +9,7 @@ public class Config
     public ulong GuildId { get; set; }
     public string AlertMessage { get; set; }
     public string NotrunningMsg { get; set; }
+    public string RunningMsg { get; set; }
     public string Process2Watch { get; set; }
     public int SecUntilScan { get; set; }
     public ulong[] AccessRoles { get; set; }

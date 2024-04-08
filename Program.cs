@@ -26,33 +26,39 @@ public class Bot
     private static Config _config;
     public static async Task Main()
     {
-        var configFile = Environment.CurrentDirectory + "\\config.json";
-        if (File.Exists(configFile))
+        try
         {
-            
-            _config = JsonConvert.DeserializeObject<Config>(File.ReadAllText(configFile))!;
-            
-            //Initialization of the _client
-            _client = new DiscordSocketClient();
-            _client.Log += Log;
-            await _client.LoginAsync(TokenType.Bot,_config.DiscordToken);
-            await _client.StartAsync();
-        
-            
-            _client.Ready += Client_Ready;
-           
-            _client.SlashCommandExecuted += SlashCommandHandler;
-            
-             
-        }
-        else
+            var configFile = Environment.CurrentDirectory + "\\config.json";
+            if (File.Exists(configFile))
+            {
+
+                _config = JsonConvert.DeserializeObject<Config>(File.ReadAllText(configFile))!;
+
+                //Initialization of the _client
+                _client = new DiscordSocketClient();
+                _client.Log += Log;
+                await _client.LoginAsync(TokenType.Bot, _config.DiscordToken);
+                await _client.StartAsync();
+
+
+                _client.Ready += Client_Ready;
+
+                _client.SlashCommandExecuted += SlashCommandHandler;
+
+
+            }
+            else
+            {
+                Console.WriteLine("Config file not found! please run the installer.");
+                var install = new Installer();
+                install.Install();
+            }
+
+            await Task.Delay(-1);
+        } catch (Exception ex)
         {
-            Console.WriteLine("Config file not found! please run the installer.");
-            var install = new Installer();
-            install.Install();
+            Console.WriteLine($"msg: {ex.Message} source: {ex.Source}");
         }
-        
-        await Task.Delay(-1);
     }
 
     public static async Task Client_Ready()
@@ -93,37 +99,48 @@ public class Bot
 }
     private static async Task HandleSqbotCommand(SocketSlashCommand command)
     {
-        // First lets extract our variables
-        var fieldName = command.Data.Options.First().Name;
-       
-        switch (fieldName)
+        try
         {
-            case "start":
+
+
+            // First lets extract our variables
+            var fieldName = command.Data.Options.First().Name;
+
+            switch (fieldName)
             {
-               ProcessChecker.Start(_config);
-               await command.RespondAsync($"Server is starting!");
-               
+                case "start":
+                {
+                    await command.RespondAsync($"Server is starting!");
+                    ProcessChecker.Start(_config);
+                    
+
+                }
+                    break;
+                case "stop":
+                {
+                    await command.RespondAsync($"Server is stopping!");
+                    ProcessChecker.Stop();
+                    
+                }
+                    break;
+                case "restart":
+                {
+                    await command.RespondAsync($"Server is restarting!");
+                    ProcessChecker.Restart(_config);
+                   
+                }
+                    break;
+                case "status":
+                {
+                    //await ProcessChecker.Start(30,_client,_config);
+                    await ProcessChecker.Check(command, _config);
+
+                }
+                    break;
             }
-                break;
-            case "stop":
-            {
-               ProcessChecker.Stop();
-               await command.RespondAsync($"Server is stopping!");
-            }
-                break;
-            case "restart":
-            {
-                ProcessChecker.Restart(_config);
-                await command.RespondAsync($"Server is restarting!");
-            }
-                break;
-            case "status":
-            {
-                //await ProcessChecker.Start(30,_client,_config);
-                await ProcessChecker.Check(command,_config);
-               
-            }
-                break;
+        } catch (Exception ex)
+        {
+            Console.WriteLine($"msg: {ex.Message} source: {ex.Source}");
         }
     }
 

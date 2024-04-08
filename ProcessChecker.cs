@@ -14,50 +14,80 @@ public class ProcessChecker
     private static Process _process;
     public static async Task Monitor(DiscordSocketClient _client,Config _c)
     {
-        isToRun = true;
-        while (isToRun)
+        try
         {
-            if (!IsNodeRunning(_c))
+            isToRun = true;
+            while (isToRun)
             {
-                 var chan = (SocketTextChannel)(_client.GetChannel(_c.DiscordChannelId)); 
-                 await chan.SendMessageAsync($"{_c.AlertMessage.ToString()}");
+                if (!IsNodeRunning(_c))
+                {
+                    var chan = (SocketTextChannel)(_client.GetChannel(_c.DiscordChannelId));
+                    await chan.SendMessageAsync($"{_c.AlertMessage.ToString()}");
+                }
+
+
+
+                await Task.Delay(TimeSpan.FromSeconds(_c.SecUntilScan)); // wait for 5 seconds before next check
             }
-
-           
-
-            await Task.Delay(TimeSpan.FromSeconds(_c.SecUntilScan));  // wait for 5 seconds before next check
+        } catch (Exception ex)
+        {
+            Console.WriteLine($"msg: {ex.Message} source: {ex.Source}");
         }
     }
     
     public static async Task Check(SocketSlashCommand command,Config _c) {
+        try
+        
+        {
             if (!IsNodeRunning(_c))
             {
                 await command.RespondAsync($"{_c.NotrunningMsg}");
             }
-        
+            else
+            {
+                await command.RespondAsync($"{_c.RunningMsg}");
+            }
+        } catch (Exception ex)
+        {
+            Console.WriteLine($"msg: {ex.Message} source: {ex.Source}");
+        }
     }
 
     public static void Stop()
     {
-        isToRun = false;
-        isRunning = false;
-        _process.Kill();
-        
+        try
+        {
+
+            isToRun = false;
+            isRunning = false;
+            _process.Kill();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"msg: {ex.Message} source: {ex.Source}");
+        }
     }
     public static void Start(Config _c)
     {
-        isRunning = true;
-        var psi = new ProcessStartInfo();
-        psi.FileName = _c.StartScript;
-        psi.RedirectStandardOutput = false;
-        psi.RedirectStandardError = false;
-        psi.UseShellExecute = false;
+        try
+        {
+            isRunning = true;
+            var psi = new ProcessStartInfo();
+            psi.FileName = _c.StartScript;
+            psi.RedirectStandardOutput = false;
+            psi.RedirectStandardError = false;
+            psi.UseShellExecute = false;
 
-        _process = new Process();
-        _process.StartInfo = psi;
-        _process.Start();
-
-       _process.WaitForExit();
+            _process = new Process();
+            _process.StartInfo = psi;
+            _process.Start();
+            
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"msg: {ex.Message} source: {ex.Source}");
+        }
+       
     }
 
     public static void Restart(Config _c)
